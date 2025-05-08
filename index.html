@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Assessment System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 添加Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="login-page">
+        <div class="login-container">
+            <div class="login-box">
+                <h1>风控风险评估系统</h1>
+                <form onsubmit="event.preventDefault(); login();">
+                    <div class="form-group">
+                        <label for="username">用户名</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">密码</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit" class="login-button">登录</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主应用 -->
+    <div id="app" style="display: none;">
+        <div class="company-list-container">
+            <!-- 左侧公司列表 -->
+            <div class="company-sidebar">
+                <div class="sidebar-header">
+                    <!-- <h2>企业列表</h2> -->
+                    <button class="dashboard-button" onclick="showGlobalDashboardModal()">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>仪表板</span>
+                    </button>
+                    <button class="add-button" onclick="showAddCompanyForm()">
+                        <i class="fas fa-plus"></i>
+                        <span>添加企业</span>
+                    </button>
+                </div>
+                <div id="company-cards"></div>
+            </div>
+
+            <!-- 右侧内容区域 -->
+            <div class="dashboard-main" id="company-dashboard">
+                <!-- 仪表板内容将在选择公司时动态加载 -->
+                <div class="empty-state">
+                    <i>📊</i>
+                    <p>选择一个公司查看详细信息</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="icon-button edit-button">
+        <i class="fas fa-edit"></i>
+    </button>
+
+    <button class="icon-button delete-button">
+        <i class="fas fa-trash"></i>
+    </button>
+
+    <script src="js/main.js"></script>
+</body>
+</html> 

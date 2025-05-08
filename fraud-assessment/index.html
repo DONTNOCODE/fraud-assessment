@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Assessment</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .risk-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            padding: 25px;
+            max-width: 1200px;
+            margin: 0 auto 30px;
+            background-color: #f9f9f9;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        }
+        .risk-dashboard > div {
+            text-align: center;
+            padding: 25px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .risk-dashboard > div:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.12);
+        }
+        .risk-dashboard h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        .risk-dashboard canvas {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 250px;
+            max-height: 250px;
+        }
+        
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            padding: 0 25px 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .fraud-control-status, .risk-treatment, .improvement-progress {
+            margin: 0;
+            padding: 25px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .fraud-control-status:hover, .risk-treatment:hover, .improvement-progress:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.12);
+        }
+        
+        .fraud-control-status h3, .risk-treatment h3, .improvement-progress h3 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        
+        .fraud-control-status .chart-container {
+            height: 450px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .risk-treatment .chart-container {
+            height: 350px;
+        }
+        
+        .improvement-progress .chart-container {
+            height: 400px;
+        }
+        
+        .section-header {
+            margin-bottom: 20px;
+            padding: 0 25px;
+        }
+        
+        .section-header h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        
+        .section-description {
+            color: #666;
+            font-size: 1em;
+        }
+        
+        @media (max-width: 992px) {
+            .risk-dashboard {
+                grid-template-columns: repeat(1, 1fr);
+                padding: 20px;
+            }
+            
+            .dashboard-container {
+                padding: 0 20px 25px;
+            }
+            
+            .fraud-control-status .chart-container,
+            .risk-treatment .chart-container,
+            .improvement-progress .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="back-button" onclick="window.location.href = '../index.html'">
+                    <i class="fas fa-arrow-left"></i>
+                    返回产品列表
+                </button>
+            </div>
+            <div class="sidebar-nav">
+                <button class="nav-item active" onclick="switchTab('fraud')">
+                    <i class="fas fa-shield-alt"></i>
+                    Fraud Assessment
+                </button>
+                <button class="nav-item" onclick="switchTab('aml')">
+                    <i class="fas fa-money-check-alt"></i>
+                    AML Assessment
+                </button>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <div class="product-info-panel">
+                <div class="product-header">
+                    <h1 class="product-name"><!-- 产品名称将通过JS动态加载 --></h1>
+                    <div class="product-meta">
+                        <span class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span class="launch-date"><!-- 上线日期 --></span>
+                        </span>
+                        <span class="meta-item">
+                            <i class="fas fa-user"></i>
+                            <span class="assessor"><!-- 评估人 --></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content active" id="fraud">
+                <!-- 步骤指示器 -->
+                <div class="steps-indicator">
+                    <div class="step active" data-step="identification" onclick="switchFraudStep('identification')">
+                        <div class="step-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="step-label">
+                            <span class="step-number">Step 1</span>
+                            <span class="step-text">Fraud Risk Assessment</span>
+                        </div>
+                    </div>
+                    
+                    <div class="step" data-step="action-tracker" onclick="switchFraudStep('action-tracker')">
+                        <div class="step-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="step-label">
+                            <span class="step-number">Step 2</span>
+                            <span class="step-text">Action Tracker</span>
+                        </div>
+                    </div>
+                    
+                    <div class="step" data-step="treatment" onclick="switchFraudStep('treatment')">
+                        <div class="step-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="step-label">
+                            <span class="step-number">Step 3</span>
+                            <span class="step-text">Risk Dashboard</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Fraud Risk Assessment 内容 -->
+                <div class="step-content active" id="fraud-identification">
+                    <div class="section-header">
+                        <div class="header-left">
+                            <h2>Fraud Risk Assessment</h2>
+                            <p class="section-description">Select and assess fraud risks for this product</p>
+                        </div>
+                        <button class="add-fraud-type-btn" onclick="showFraudTypeSelection()">
+                            <i class="fas fa-plus"></i>
+                            Add Fraud Type
+                        </button>
+                    </div>
+                    
+                    <div class="fraud-type-grid">
+                        <!-- 已选择的fraud types将在这里显示 -->
+                    </div>
+                </div>
+                
+                <!-- Action Tracker 内容 -->
+                <div class="step-content" id="action-tracker">
+                    <div class="section-header">
+                        <div class="header-left">
+                            <h2>Action Tracker</h2>
+                            <p class="section-description">Track and manage action items for fraud prevention</p>
+                        </div>
+                        <button class="add-action-btn" onclick="showAddActionForm()">
+                            <i class="fas fa-plus"></i>
+                            Add Action
+                        </button>
+                    </div>
+                    
+                    <div class="action-tracker-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Action Name</th>
+                                    <th>Action Description</th>
+                                    <th>Linked Fraud</th>
+                                    <th>Priority Level</th>
+                                    <th>Completion Date</th>
+                                    <th>Timeline Tracking</th>
+                                    <th>Completion Status</th>
+                                    <th>Action Owner</th>
+                                    <th>Remark</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="action-list">
+                                <tr data-id="1">
+                                    <td>1</td>
+                                    <td>Blacklist</td>
+                                    <td>To add blacklist prevention rule for realtime detection, any pre-determined phishing list / stolen account list / fraudster list / stolen identity or customer information can be used;</td>
+                                    <td>
+                                        Phishing<br>
+                                        Stolen Bank Account<br>
+                                        Account Takeover<br>
+                                        Identity Fraud
+                                    </td>
+                                    <td>P0</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>0%</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="icon-button edit-button" onclick="editAction(1)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="icon-button delete-button" onclick="deleteAction(1)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr data-id="2">
+                                    <td>2</td>
+                                    <td>Efficiency & Stress Testing</td>
+                                    <td>To implement efficiency testing and stress testing;</td>
+                                    <td>
+                                        Client Fraud<br>
+                                        Transaction Laundering<br>
+                                        Refund Fraud<br>
+                                        Money Mule Schemes<br>
+                                        Customer Collusive Fraud
+                                    </td>
+                                    <td>P0</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>0%</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="icon-button edit-button" onclick="editAction(2)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="icon-button delete-button" onclick="deleteAction(2)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr data-id="3">
+                                    <td>3</td>
+                                    <td>Recipient Validation</td>
+                                    <td>To check the current validation on the recipient detail, how do we ensure the recipient is genuine?</td>
+                                    <td>Account Takeover</td>
+                                    <td>P0</td>
+                                    <td>2025Q3</td>
+                                    <td></td>
+                                    <td>0%</td>
+                                    <td>Bruce</td>
+                                    <td></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="icon-button edit-button" onclick="editAction(3)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="icon-button delete-button" onclick="deleteAction(3)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr data-id="4">
+                                    <td>4</td>
+                                    <td>Login Management</td>
+                                    <td>To create and enhance the login management of the client facing funds withdraw portal, with a documented process for user login request, approval, issuance, ongoing management, specifically for TG;</td>
+                                    <td>Phishing</td>
+                                    <td>P1</td>
+                                    <td>2025Q4</td>
+                                    <td></td>
+                                    <td>0%</td>
+                                    <td>Bruce</td>
+                                    <td></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="icon-button edit-button" onclick="editAction(4)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="icon-button delete-button" onclick="deleteAction(4)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr data-id="5">
+                                    <td>5</td>
+                                    <td>TM Rules Sender Activities</td>
+                                    <td>To review existing monitoring rules on detecting suspicious sender account activities;</td>
+                                    <td>Phishing<br>Transaction Laundering</td>
+                                    <td>P1</td>
+                                    <td>2025Q4</td>
+                                    <td></td>
+                                    <td>0%</td>
+                                    <td>Bruce</td>
+                                    <td></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="icon-button edit-button" onclick="editAction(5)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="icon-button delete-button" onclick="deleteAction(5)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr data-id="6">
+                                    <td>6</td>
+                                    <td>Transaction Monitoring Rule Enhancement</td>
+                                    <td>To further review and enhance the transaction monitoring rule per specific type of fraud behaviour;</td>
+                                    <td>All</td>
+                                    <td>P1</td>
+                                    <td>2025Q4</td>
+                                    <td></td>
+                                    <td>0%</td>
+                                    <td>Bruce</td>
+                                    <td></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="icon-button edit-button" onclick="editAction(6)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="icon-button delete-button" onclick="deleteAction(6)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr data-id="7">
+                                    <td>7</td>
+                                    <td>TM Rules Recipient Data</td>
+                                    <td>To add transaction data of the recipient side for monitoring rule enhancement - cover stolen / suspicious account used to receive funds, blacklist any confirmed user detail preventing future sending transactions;</td>
+                                    <td>Stolen Bank Account<br>Identity Fraud<br>Client Fraud<br>Transaction Laundering<br>Money Mule Schemes<br>Customer Collusive Fraud</td>
+                                    <td>P1</td>
+                                    <td>2025Q3</td>
+                                    <td></td>
+                                    <td>0%</td>
+                                    <td>Bruce</td>
+                                    <td></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="icon-button edit-button" onclick="editAction(7)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="icon-button delete-button" onclick="deleteAction(7)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr data-id="8">
+                                    <td>8</td>
+                                    <td>Fraud Incident Reporting Protocols</td>
+                                    <td>Implement fraud incident protocols. TG will not have the visibility of the FIs' individual customers. For a better transparency on fraud activities and regulatory reporting, it is essential to establish a clear protocol with the FIs for reporting and managing incidents of suspected fraud. This includes a formal process for escalating fraud concerns, providing detailed reports, and taking corrective actions when fraud or collusion is identified.</td>
+                                    <td>Client Fraud</td>
+                                    <td>P1</td>
+                                    <td>2025Q3</td>
+                                    <td></td>
+                                    <td>0%</td>
+                                    <td>Bruce</td>
+                                    <td></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="icon-button edit-button" onclick="editAction(8)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="icon-button delete-button" onclick="deleteAction(8)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Risk Treatment 内容 -->
+                <div class="step-content" id="treatment">
+                    <div class="section-header">
+                        <div class="header-left">
+                            <h2>Risk Dashboard</h2>
+                            <p class="section-description">View risk treatment dashboard</p>
+                        </div>
+                    </div>
+                    <div class="risk-dashboard">
+                        <div>
+                            <h3>Inherent Risk</h3>
+                            <canvas id="inherentRiskChart"></canvas>
+                        </div>
+                        <div>
+                            <h3>Control Effectiveness</h3>
+                            <canvas id="controlEffectivenessChart"></canvas>
+                        </div>
+                        <div>
+                            <h3>Residual Risk</h3>
+                            <canvas id="residualRiskChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-container">
+                        <div class="fraud-control-status">
+                            <h3>Fraud Control Status</h3>
+                            <div class="chart-container">
+                                <canvas id="fraudControlStatusChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="risk-treatment">
+                            <h3>Risk Treatment</h3>
+                            <div class="chart-container">
+                                <canvas id="riskTreatmentChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="improvement-progress">
+                            <h3>Improvement Progress</h3>
+                            <div class="chart-container">
+                                <canvas id="improvementProgressChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="aml">
+                <div class="empty-state">
+                    <i class="fas fa-money-check-alt"></i>
+                    <p>AML Assessment coming soon...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确保在 body 结束标签前加载脚本 -->
+    <script>
+        // 页面加载完成后初始化图表
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化图表
+            initializeDashboardCharts();
+            console.log('Dashboard charts initialized on page load');
+            
+            // 强制重新绘制图表，解决可能的渲染问题
+            setTimeout(function() {
+                initializeDashboardCharts();
+                console.log('Dashboard charts redrawn after delay');
+            }, 300);
+        });
+        
+        // 切换步骤的函数
+        function switchFraudStep(step) {
+            console.log('Switching to step:', step);
+            // 更新步骤指示器状态
+            document.querySelectorAll('.step').forEach(s => {
+                s.classList.remove('active');
+            });
+            document.querySelector(`.step[data-step="${step}"]`).classList.add('active');
+            
+            // 更新内容显示
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 根据步骤显示相应内容
+            if (step === 'identification') {
+                document.getElementById('fraud-identification').classList.add('active');
+            } else if (step === 'action-tracker') {
+                document.getElementById('action-tracker').classList.add('active');
+            } else if (step === 'treatment') {
+                document.getElementById('treatment').classList.add('active');
+                
+                // 如果选择了风险仪表板，重新初始化图表
+                setTimeout(function() {
+                    console.log('Reinitializing dashboard charts after switching to treatment step');
+                    initializeDashboardCharts();
+                }, 100);
+            }
+        }
+        
+        // 显示添加Action表单
+        function showAddActionForm(actionId = null) {
+            let action = { id: '', name: '', description: '', linkedFraud: [], priority: 'P0', completionDate: '', timeline: '', status: '0%' };
+            
+            // 如果是编辑模式，获取已有的数据
+            if (actionId) {
+                const row = document.querySelector(`#action-list tr[data-id="${actionId}"]`);
+                if (row) {
+                    action.id = actionId;
+                    action.name = row.cells[1].textContent;
+                    action.description = row.cells[2].textContent;
+                    action.linkedFraud = row.cells[3].innerHTML.split('<br>').map(item => item.trim()).filter(item => item);
+                    action.priority = row.cells[4].textContent;
+                    action.completionDate = row.cells[5].textContent;
+                    action.timeline = row.cells[6].textContent;
+                    action.status = row.cells[7].textContent;
+                }
+            }
+            
+            // 获取所有可用的欺诈类型
+            const fraudTypes = [
+                'Phishing', 
+                'Stolen Bank Account', 
+                'Account Takeover', 
+                'Identity Fraud',
+                'Client Fraud',
+                'Transaction Laundering',
+                'Refund Fraud',
+                'Money Mule Schemes',
+                'Customer Collusive Fraud'
+            ];
+            
+            const modalHtml = `
+                <div class="modal-overlay">
+                    <div class="modal-content wide-modal">
+                        <div class="modal-header">
+                            <h3>${actionId ? 'Edit Action' : 'Add New Action'}</h3>
+                            <button class="close-button" onclick="this.closest('.modal-overlay').remove()">×</button>
+                        </div>
+                        
+                        <form id="action-form" class="assessment-form">
+                            <input type="hidden" name="actionId" value="${action.id}">
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="action-name">Action Name</label>
+                                    <input type="text" id="action-name" name="actionName" value="${action.name}" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="priority-level">Priority Level</label>
+                                    <select id="priority-level" name="priorityLevel">
+                                        <option value="P0" ${action.priority === 'P0' ? 'selected' : ''}>P0 (Critical)</option>
+                                        <option value="P1" ${action.priority === 'P1' ? 'selected' : ''}>P1 (High)</option>
+                                        <option value="P2" ${action.priority === 'P2' ? 'selected' : ''}>P2 (Medium)</option>
+                                        <option value="P3" ${action.priority === 'P3' ? 'selected' : ''}>P3 (Low)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="action-description">Action Description</label>
+                                <textarea id="action-description" name="actionDescription" rows="3" required>${action.description}</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Linked Fraud Types</label>
+                                <div class="fraud-type-selection">
+                                    ${fraudTypes.map(type => `
+                                        <label class="fraud-checkbox">
+                                            <input type="checkbox" name="linkedFraud" value="${type}" 
+                                                ${action.linkedFraud.includes(type) ? 'checked' : ''}>
+                                            ${type}
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="completion-date">Completion Date</label>
+                                    <input type="date" id="completion-date" name="completionDate" value="${action.completionDate}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="timeline-tracking">Timeline Tracking</label>
+                                    <input type="text" id="timeline-tracking" name="timelineTracking" value="${action.timeline}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="completion-status">Completion Status</label>
+                                    <select id="completion-status" name="completionStatus">
+                                        <option value="0%" ${action.status === '0%' ? 'selected' : ''}>0%</option>
+                                        <option value="25%" ${action.status === '25%' ? 'selected' : ''}>25%</option>
+                                        <option value="50%" ${action.status === '50%' ? 'selected' : ''}>50%</option>
+                                        <option value="75%" ${action.status === '75%' ? 'selected' : ''}>75%</option>
+                                        <option value="100%" ${action.status === '100%' ? 'selected' : ''}>100%</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="action-owner">Action Owner</label>
+                                <input type="text" id="action-owner" name="actionOwner" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="remark">Remark</label>
+                                <textarea id="remark" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                                <button type="button" onclick="saveAction(this.form)">Save Action</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        // 保存Action
+        function saveAction(form) {
+            const formData = new FormData(form);
+            const actionId = formData.get('actionId') || Math.floor(Math.random() * 10000);
+            const actionName = formData.get('actionName');
+            const actionDescription = formData.get('actionDescription');
+            const priorityLevel = formData.get('priorityLevel');
+            const completionDate = formData.get('completionDate');
+            const timelineTracking = formData.get('timelineTracking');
+            const completionStatus = formData.get('completionStatus');
+            
+            // 获取所有选中的欺诈类型
+            const linkedFraud = [];
+            document.querySelectorAll('input[name="linkedFraud"]:checked').forEach(checkbox => {
+                linkedFraud.push(checkbox.value);
+            });
+            
+            // 如果是编辑模式，更新现有行
+            const existingRow = document.querySelector(`#action-list tr[data-id="${actionId}"]`);
+            if (existingRow) {
+                existingRow.cells[1].textContent = actionName;
+                existingRow.cells[2].textContent = actionDescription;
+                existingRow.cells[3].innerHTML = linkedFraud.join('<br>');
+                existingRow.cells[4].textContent = priorityLevel;
+                existingRow.cells[5].textContent = completionDate;
+                existingRow.cells[6].textContent = timelineTracking;
+                existingRow.cells[7].textContent = completionStatus;
+            } else {
+                // 否则，添加新行
+                const newRowIndex = document.querySelectorAll('#action-list tr').length + 1;
+                const newRow = `
+                    <tr data-id="${actionId}">
+                        <td>${newRowIndex}</td>
+                        <td>${actionName}</td>
+                        <td>${actionDescription}</td>
+                        <td>${linkedFraud.join('<br>')}</td>
+                        <td>${priorityLevel}</td>
+                        <td>${completionDate}</td>
+                        <td>${timelineTracking}</td>
+                        <td>${completionStatus}</td>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="icon-button edit-button" onclick="editAction(${actionId})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="icon-button delete-button" onclick="deleteAction(${actionId})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('action-list').insertAdjacentHTML('beforeend', newRow);
+            }
+            
+            // 关闭模态框
+            document.querySelector('.modal-overlay').remove();
+        }
+        
+        // 编辑Action
+        function editAction(actionId) {
+            showAddActionForm(actionId);
+        }
+        
+        // 删除Action
+        function deleteAction(actionId) {
+            if (confirm('Are you sure you want to delete this action?')) {
+                const row = document.querySelector(`#action-list tr[data-id="${actionId}"]`);
+                if (row) {
+                    row.remove();
+                    
+                    // 重新编号
+                    document.querySelectorAll('#action-list tr').forEach((row, index) => {
+                        row.cells[0].textContent = index + 1;
+                    });
+                }
+            }
+        }
+        
+        // 确保 showFraudTypeSelection 函数在全局作用域中可用
+        window.showFraudTypeSelection = function() {
+            const productId = localStorage.getItem('currentProductId');
+            const selectedTypes = JSON.parse(localStorage.getItem(`fraudTypes_${productId}`) || '[]');
+            
+            const formHtml = `
+                <div class="modal-overlay">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Add Fraud Assessment</h3>
+                            <button class="close-button" onclick="this.closest('.modal-overlay').remove()">×</button>
+                        </div>
+                        
+                        <div class="fraud-type-list">
+                            ${FRAUD_TYPES.map(type => `
+                                <div class="fraud-type-item">
+                                    <div class="fraud-type-header">
+                                        <label>
+                                            <input type="checkbox" value="${type.id}" 
+                                                data-name="${type.name}" 
+                                                data-icon="${type.icon}"
+                                                data-description="${type.description || ''}"
+                                                ${selectedTypes.some(t => t.id === type.id) ? 'checked disabled' : ''}>
+                                            <i class="fas ${type.icon}"></i>
+                                            <span>${type.name}</span>
+                                        </label>
+                                    </div>
+                                    <div class="fraud-type-description">
+                                        ${type.description || ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                            <button type="button" onclick="saveFraudTypeSelection()">Add Selected</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', formHtml);
+        };
+
+        // 计算风险等级时的格式化
+        function formatRiskLevel(level) {
+            // 确保第一个字母大写，其余小写
+            return level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
+        }
+
+        // 计算固有风险等级
+        function calculateInherentRisk(likelihood, impact) {
+            const score = likelihood * impact;
+            let riskLevel = '';
+            
+            if (score > 15) riskLevel = 'High';
+            else if (score > 8) riskLevel = 'Moderate';
+            else if (score > 0) riskLevel = 'Low';
+            
+            return formatRiskLevel(riskLevel); // 使用格式化函数
+        }
+
+        // 计算剩余风险等级
+        function calculateResidualRisk(inherentRisk, controlEffectiveness) {
+            let residualRisk = inherentRisk;
+            
+            if (controlEffectiveness === 'Strong') {
+                if (inherentRisk === 'High') residualRisk = 'Moderate';
+                else if (inherentRisk === 'Moderate') residualRisk = 'Low';
+            } else if (controlEffectiveness === 'Moderate') {
+                if (inherentRisk === 'High') residualRisk = 'Moderate';
+            }
+            
+            return formatRiskLevel(residualRisk); // 使用格式化函数
+        }
+
+        // 更新风险评估表单显示
+        function updateRiskLevels() {
+            const form = document.querySelector('.assessment-form');
+            const likelihood = parseInt(form.likelihood.value) || 0;
+            const impact = parseInt(form.impact.value) || 0;
+            
+            // 计算并显示固有风险等级
+            const inherentRisk = calculateInherentRisk(likelihood, impact);
+            form.inherentRiskLevel.value = inherentRisk;
+            
+            // 计算并显示剩余风险等级
+            const controlEffectiveness = form.controlEffectiveness.value;
+            const residualRisk = calculateResidualRisk(inherentRisk, controlEffectiveness);
+            form.residualRisk.value = residualRisk;
+            
+            // 根据风险等级更新显示样式
+            updateRiskLevelStyle(form.inherentRiskLevel, inherentRisk.toLowerCase());
+            updateRiskLevelStyle(form.residualRisk, residualRisk.toLowerCase());
+        }
+
+        // 更新风险等级显示样式
+        function updateRiskLevelStyle(input, riskLevel) {
+            input.className = ''; // 清除现有类
+            input.classList.add(`risk-${riskLevel.toLowerCase()}`);
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 
